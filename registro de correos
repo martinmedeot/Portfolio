@@ -1,0 +1,111 @@
+using System;
+using System.Collections.Generic;
+
+class Program
+{
+    static Dictionary<string, List<string>> usuarios = new Dictionary<string, List<string>>();
+
+    static void Main()
+    {
+        while (true)
+        {
+            Console.WriteLine("1. Registrar nuevo usuario");
+            Console.WriteLine("2. Visualizar correos registrados");
+            Console.WriteLine("3. Enviar mensaje");
+            Console.WriteLine("4. Salir");
+
+            Console.Write("Seleccione una opción: ");
+            string opcion = Console.ReadLine();
+
+            switch (opcion)
+            {
+                case "1":
+                    RegistrarUsuario();
+                    break;
+
+                case "2":
+                    VisualizarCorreos();
+                    break;
+
+                case "3":
+                    EnviarMensaje();
+                    break;
+
+                case "4":
+                    Environment.Exit(0);
+                    break;
+
+                default:
+                    Console.WriteLine("Opción no válida. Intente de nuevo.");
+                    break;
+            }
+        }
+    }
+
+    static void RegistrarUsuario()
+    {
+        Console.Write("Ingrese su correo electrónico: ");
+        string correo = Console.ReadLine();
+
+        if (!usuarios.ContainsKey(correo))
+        {
+            usuarios[correo] = new List<string>();
+            Console.WriteLine("Usuario registrado exitosamente.");
+        }
+        else
+        {
+            Console.WriteLine("El usuario ya está registrado.");
+        }
+    }
+
+    static void VisualizarCorreos()
+    {
+        Console.WriteLine("Correos registrados:");
+
+        foreach (var usuario in usuarios.Keys)
+        {
+            Console.WriteLine(usuario);
+        }
+
+        Console.Write("Seleccione un usuario para ver sus mensajes (o escriba 'todos'): ");
+        string seleccion = Console.ReadLine();
+
+        if (seleccion.ToLower() == "todos")
+        {
+            foreach (var usuario in usuarios)
+            {
+                Console.WriteLine($"{usuario.Key}: {string.Join(", ", usuario.Value)}");
+            }
+        }
+        else if (usuarios.ContainsKey(seleccion))
+        {
+            Console.WriteLine($"{seleccion}: {string.Join(", ", usuarios[seleccion])}");
+        }
+        else
+        {
+            Console.WriteLine("Usuario no encontrado.");
+        }
+    }
+
+    static void EnviarMensaje()
+    {
+        Console.Write("Ingrese su correo electrónico: ");
+        string remitente = Console.ReadLine();
+
+        Console.Write("Ingrese el destinatario: ");
+        string destinatario = Console.ReadLine();
+
+        if (usuarios.ContainsKey(destinatario))
+        {
+            Console.Write("Ingrese el mensaje: ");
+            string mensaje = Console.ReadLine();
+
+            usuarios[destinatario].Add($"{remitente}: {mensaje}");
+            Console.WriteLine("Mensaje enviado exitosamente.");
+        }
+        else
+        {
+            Console.WriteLine("El destinatario no está registrado.");
+        }
+    }
+}
