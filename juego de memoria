@@ -1,0 +1,143 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Windows.Forms;
+
+namespace JuegoDeMemoria
+{
+    public partial class FormJuegoMemoria : Form
+    {
+        private const int NumeroColumnas = 4; // Número de columnas
+        private const int NumeroFilas = 4;    // Número de filas
+        private const int TiempoVisible = 5000; // Tiempo en milisegundos para mostrar las tarjetas no coincidentes
+
+        private Button[,] botones;  // Matriz de botones
+        private string[,] simbolos; // Matriz de símbolos para las tarjetas
+        private Button primerBoton;  // Almacena el primer botón clickeado
+        private Button segundoBoton; // Almacena el segundo botón clickeado
+        private bool permitirClic = true; // Indica si se permite hacer clic en los botones
+
+        private DateTime tiempoInicio; // Almacena el tiempo de inicio del juego
+
+        public FormJuegoMemoria()
+        {
+            InitializeComponent();
+            InicializarJuego();
+        }
+
+        private void InicializarJuego()
+        {
+            // Inicializar matrices y configurar la interfaz gráfica
+            botones = new Button[NumeroColumnas, NumeroFilas];
+            simbolos = new string[NumeroColumnas, NumeroFilas];
+
+            // Crear botones y asignar símbolos aleatorios
+            List<string> simbolosDisponibles = ObtenerSimbolosAleatorios();
+            for (int i = 0; i < NumeroColumnas; i++)
+            {
+                for (int j = 0; j < NumeroFilas; j++)
+                {
+                    Button boton = new Button();
+                    boton.Size = new System.Drawing.Size(50, 50);
+                    boton.Location = new System.Drawing.Point(i * 60, j * 60);
+                    boton.Tag = new Tuple<int, int>(i, j);
+                    boton.Click += new EventHandler(Boton_Click);
+
+                    Controls.Add(boton);
+                    botones[i, j] = boton;
+
+                    // Asignar símbolos aleatorios a las tarjetas
+                    string simbolo = simbolosDisponibles.First();
+                    simbolosDisponibles.RemoveAt(0);
+                    simbolos[i, j] = simbolo;
+                }
+            }
+
+            tiempoInicio = DateTime.Now; // Registrar el tiempo de inicio
+        }
+
+        private List<string> ObtenerSimbolosAleatorios()
+        {
+            // Lista de símbolos para las tarjetas
+            List<string> simbolos = new List<string>
+            {
+                "A", "B", "C", "D", "E", "F", "G", "H",
+                "A", "B", "C", "D", "E", "F", "G", "H"
+            };
+
+            // Mezclar la lista para obtener símbolos aleatorios
+            Random random = new Random();
+            int n = simbolos.Count;
+            while (n > 1)
+            {
+                n--;
+                int k = random.Next(n + 1);
+                string value = simbolos[k];
+                simbolos[k] = simbolos[n];
+                simbolos[n] = value;
+            }
+
+            return simbolos;
+        }
+
+        private void Boton_Click(object sender, EventArgs e)
+        {
+            if (!permitirClic) return;
+
+            Button boton = (Button)sender;
+            int columna = ((Tuple<int, int>)boton.Tag).Item1;
+            int fila = ((Tuple<int, int>)boton.Tag).Item2;
+
+            // Mostrar el símbolo de la tarjeta al hacer clic
+            boton.Text = simbolos[columna, fila];
+
+            if (primerBoton == null)
+            {
+                primerBoton = boton;
+            }
+            else if (boton != primerBoton)
+            {
+                segundoBoton = boton;
+                permitirClic = false; // Evitar clics mientras se verifica
+
+                // Verificar si los símbolos coinciden
+                if (simbolos[primerBoton.Location.X / 60, primerBoton.Location.Y / 60] == simbolos[columna, fila])
+                {
+                    // Símbolos coincidentes, dejar las tarjetas visibles
+                    primerBoton.Enabled = false;
+                    segundoBoton.Enabled = false;
+                    ResetearBotones();
+                }
+                else
+                {
+                    // Símbolos no coincidentes, ocultar tarjetas después de unos segundos
+                    Timer temporizador = new Timer();
+                    temporizador.Interval = TiempoVisible;
+                    temporizador.Tick += new EventHandler((s, ev) =>
+                    {
+                        primerBoton.Text = "";
+                        segundoBoton.Text = "";
+                        ResetearBotones();
+                        temporizador.Stop();
+                    });
+                    temporizador.Start();
+                }
+            }
+        }
+
+        private void ResetearBotones()
+        {
+            primerBoton = null;
+            segundoBoton = null;
+            permitirClic = true;
+
+            // Verificar si todas las tarjetas han sido emparejadas
+            if (botones.Cast<Button>().All(b => !b.Enabled))
+            {
+                TimeSpan tiempoTranscurrido = DateTime.Now - tiempoInicio;
+                MessageBox.Show($"¡Felicidades! Has completado el juego en {tiempoTranscurrido.TotalSeconds} segundos.");
+            }
+        }
+    }
+}
