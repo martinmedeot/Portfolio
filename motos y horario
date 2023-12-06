@@ -1,0 +1,87 @@
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Windows.Forms;
+
+namespace HorarioMotos
+{
+    public partial class MainForm : Form
+    {
+        private const int NumeroMotociclistas = 8;
+        private List<Button> horariosButtons = new List<Button>();
+        private int motociclistasDisponibles = NumeroMotociclistas;
+
+        public MainForm()
+        {
+            InitializeComponent();
+            ConstruirHorarios();
+        }
+
+        private void ConstruirHorarios()
+        {
+            DateTime horaInicio = DateTime.Parse("08:00 AM");
+            DateTime horaFin = DateTime.Parse("08:00 PM");
+            TimeSpan intervalo = TimeSpan.FromMinutes(30);
+
+            while (horaInicio < horaFin)
+            {
+                Button btnHorario = new Button();
+                btnHorario.Text = horaInicio.ToString("hh:mm tt");
+                btnHorario.Tag = horaInicio;
+                btnHorario.Click += BtnHorario_Click;
+                horariosButtons.Add(btnHorario);
+
+                horaInicio = horaInicio.Add(intervalo);
+            }
+
+            // Configurar el diseño de los botones en el formulario
+            int top = 50;
+            foreach (Button btn in horariosButtons)
+            {
+                btn.Size = new Size(120, 30);
+                btn.Location = new Point(50, top);
+                top += 40;
+                Controls.Add(btn);
+            }
+        }
+
+        private void BtnHorario_Click(object sender, EventArgs e)
+        {
+            Button btn = (Button)sender;
+
+            if (btn.BackColor == Color.Red)
+            {
+                MessageBox.Show("No puedes seleccionar este horario, no hay motociclistas disponibles.", "Horario no disponible", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            else
+            {
+                if (btn.BackColor == Color.Green)
+                {
+                    // Liberar recurso
+                    motociclistasDisponibles++;
+                    btn.BackColor = SystemColors.Control;
+                }
+                else if (motociclistasDisponibles > 0)
+                {
+                    // Tomar recurso
+                    motociclistasDisponibles--;
+                    btn.BackColor = Color.Green;
+                }
+                else
+                {
+                    // No hay motociclistas disponibles
+                    MessageBox.Show("No hay motociclistas disponibles para este horario.", "Sin motociclistas", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    btn.BackColor = Color.Red;
+                }
+            }
+
+            ActualizarContador();
+        }
+
+        private void ActualizarContador()
+        {
+            // Mostrar el contador de motociclistas disponibles
+            lblContador.Text = $"Motociclistas disponibles: {motociclistasDisponibles}";
+        }
+    }
+}
