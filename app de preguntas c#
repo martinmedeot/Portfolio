@@ -1,0 +1,179 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+class Program
+{
+    static void Main()
+    {
+        Console.WriteLine("Bienvenido a la Trivia App");
+        Console.Write("Ingresa tu nombre: ");
+        string nombreUsuario = Console.ReadLine();
+
+        Usuario usuario = new Usuario(nombreUsuario);
+
+        Console.WriteLine("\nElige una categoría:");
+        MostrarCategorias();
+
+        int opcionCategoria;
+        do
+        {
+            Console.Write("Ingresa el número de la categoría: ");
+        } while (!int.TryParse(Console.ReadLine(), out opcionCategoria) || opcionCategoria < 1 || opcionCategoria > 3);
+
+        CategoriaTrivia categoria = (CategoriaTrivia)opcionCategoria;
+
+        JugarTrivia(usuario, categoria);
+
+        Console.WriteLine("\n¡Felicidades, has completado la trivia!");
+        Console.WriteLine($"Puntaje total: {usuario.Puntaje}");
+        
+        // Mostrar ranking
+        MostrarRanking(usuario);
+
+        Console.WriteLine("\nGracias por jugar. ¡Hasta luego!");
+    }
+
+    static void MostrarCategorias()
+    {
+        Console.WriteLine("1. Ciencia");
+        Console.WriteLine("2. Historia");
+        Console.WriteLine("3. Deportes");
+    }
+
+    static void JugarTrivia(Usuario usuario, CategoriaTrivia categoria)
+    {
+        Trivia trivia = new Trivia(categoria);
+
+        for (int i = 1; i <= 20; i++)
+        {
+            Pregunta pregunta = trivia.ObtenerPreguntaAleatoria();
+            Console.WriteLine($"\nPregunta {i}: {pregunta.Enunciado}");
+            pregunta.MostrarOpciones();
+
+            int respuestaUsuario;
+            do
+            {
+                Console.Write("Ingresa el número de tu respuesta: ");
+            } while (!int.TryParse(Console.ReadLine(), out respuestaUsuario) || respuestaUsuario < 1 || respuestaUsuario > 5);
+
+            if (pregunta.EsRespuestaCorrecta(respuestaUsuario))
+            {
+                Console.WriteLine("¡Correcto!");
+                usuario.AumentarPuntaje();
+            }
+            else
+            {
+                Console.WriteLine($"Respuesta incorrecta. La respuesta correcta es la {pregunta.IndiceRespuestaCorrecta}");
+            }
+        }
+    }
+
+    static void MostrarRanking(Usuario usuario)
+    {
+        // Simplemente para demostrar, puedes implementar un sistema más sofisticado de ranking según tus necesidades.
+        Console.WriteLine("\nRanking de usuarios:");
+        Console.WriteLine($"1. {usuario.Nombre} - Puntaje: {usuario.Puntaje}");
+    }
+}
+
+enum CategoriaTrivia
+{
+    Ciencia = 1,
+    Historia,
+    Deportes
+}
+
+class Pregunta
+{
+    public string Enunciado { get; }
+    public string[] Opciones { get; }
+    public int IndiceRespuestaCorrecta { get; }
+
+    public Pregunta(string enunciado, string[] opciones, int indiceRespuestaCorrecta)
+    {
+        Enunciado = enunciado;
+        Opciones = opciones;
+        IndiceRespuestaCorrecta = indiceRespuestaCorrecta;
+    }
+
+    public void MostrarOpciones()
+    {
+        for (int i = 0; i < Opciones.Length; i++)
+        {
+            Console.WriteLine($"{i + 1}. {Opciones[i]}");
+        }
+    }
+
+    public bool EsRespuestaCorrecta(int indiceRespuestaUsuario)
+    {
+        return indiceRespuestaUsuario == IndiceRespuestaCorrecta;
+    }
+}
+
+class Trivia
+{
+    private List<Pregunta> preguntas;
+
+    public Trivia(CategoriaTrivia categoria)
+    {
+        preguntas = ObtenerPreguntasPorCategoria(categoria);
+    }
+
+    private List<Pregunta> ObtenerPreguntasPorCategoria(CategoriaTrivia categoria)
+    {
+        // Aquí podrías cargar las preguntas desde una fuente de datos, como una base de datos o un archivo.
+        // Por ahora, simplemente creamos preguntas de ejemplo.
+
+        List<Pregunta> preguntas = new List<Pregunta>();
+
+        switch (categoria)
+        {
+            case CategoriaTrivia.Ciencia:
+                preguntas.Add(new Pregunta("¿Cuál es el planeta más grande del sistema solar?", new[] { "Mercurio", "Venus", "Tierra", "Marte", "Júpiter" }, 5));
+                // Agregar más preguntas...
+                break;
+
+            case CategoriaTrivia.Historia:
+                preguntas.Add(new Pregunta("¿En qué año comenzó la Segunda Guerra Mundial?", new[] { "1935", "1939", "1941", "1945", "1950" }, 2));
+                // Agregar más preguntas...
+                break;
+
+            case CategoriaTrivia.Deportes:
+                preguntas.Add(new Pregunta("¿En qué deporte se utiliza una pelota de béisbol?", new[] { "Fútbol", "Baloncesto", "Béisbol", "Golf", "Tenis" }, 3));
+                // Agregar más preguntas...
+                break;
+
+            // Agregar más categorías...
+
+            default:
+                throw new ArgumentException("Categoría no válida");
+        }
+
+        return preguntas;
+    }
+
+    public Pregunta ObtenerPreguntaAleatoria()
+    {
+        Random random = new Random();
+        int indicePreguntaAleatoria = random.Next(preguntas.Count);
+        return preguntas[indicePreguntaAleatoria];
+    }
+}
+
+class Usuario
+{
+    public string Nombre { get; }
+    public int Puntaje { get; private set; }
+
+    public Usuario(string nombre)
+    {
+        Nombre = nombre;
+        Puntaje = 0;
+    }
+
+    public void AumentarPuntaje()
+    {
+        Puntaje++;
+    }
+}
